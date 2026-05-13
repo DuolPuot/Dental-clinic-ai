@@ -78,7 +78,7 @@ export class SchedulingAgent extends BaseAgent {
 
             return {
               success: true,
-              update: { appointmentId: new Types.ObjectId(appt._id.toString()) },
+              update: { appointmentId: appt._id },
             };
           } catch (err) {
             const msg = err instanceof Error ? err.message : '';

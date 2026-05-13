@@ -40,36 +40,36 @@ function writeAuditLog(
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface TreatmentStepInput {
-  cdtCode: string;
-  description: string;
+  cdtCode?: string;
+  description?: string;
 }
 
 export interface CreatePlanInput {
-  patientId: string;
-  dentistId: string;
-  title: string;
-  steps: TreatmentStepInput[];
+  patientId?: string;
+  dentistId?: string;
+  title?: string;
+  steps?: TreatmentStepInput[];
 }
 
 export interface UpdatePlanInput {
-  planId: string;
+  planId?: string;
   title?: string;
   status?: 'draft' | 'pending_approval' | 'approved' | 'in_progress' | 'completed';
 }
 
 export interface UpdateStepInput {
-  planId: string;
-  stepId: string;
-  status: 'planned' | 'in_progress' | 'completed';
+  planId?: string;
+  stepId?: string;
+  status?: 'planned' | 'in_progress' | 'completed';
 }
 
 // ─── Cost computation (Property 3) ───────────────────────────────────────────
 // Fetch all CDT codes in a single query instead of one query per step.
 
 async function computeStepCosts(
-  steps: { cdtCode: string }[],
+  steps: { cdtCode?: string }[],
 ): Promise<Map<string, number>> {
-  const codes = [...new Set(steps.map(s => s.cdtCode))];
+  const codes = [...new Set(steps.map(s => s.cdtCode).filter(Boolean))];
   const fees = await FeeSchedule.find({ cdtCode: { $in: codes } })
     .select('cdtCode price')
     .lean<{ cdtCode: string; price: number }[]>();
@@ -111,7 +111,7 @@ export async function createPlan(
     totalEstimatedCost,
   });
 
-  writeAuditLog(ctx, 'treatmentPlan.create', plan._id, {
+  writeAuditLog(ctx, 'treatmentPlan.create', plan._id.toString(), {
     planId: plan._id.toString(),
     patientId: input.patientId,
   });
@@ -135,7 +135,7 @@ export async function updatePlan(
   ).lean<ITreatmentPlan>();
 
   if (plan) {
-    writeAuditLog(ctx, 'treatmentPlan.update', plan._id, { planId });
+    writeAuditLog(ctx, 'treatmentPlan.update', plan._id.toString(), { planId });
   }
 
   return plan;
@@ -166,7 +166,7 @@ export async function updateStep(
   ).lean<ITreatmentPlan>();
 
   if (plan) {
-    writeAuditLog(ctx, 'treatmentPlan.updateStep', plan._id, {
+    writeAuditLog(ctx, 'treatmentPlan.updateStep', plan._id.toString(), {
       planId: input.planId,
       stepId: input.stepId,
       status: input.status,
@@ -250,7 +250,7 @@ export async function getPlan(
   const plan = await TreatmentPlan.findById(planId).lean<ITreatmentPlan>();
 
   if (plan) {
-    writeAuditLog(ctx, 'treatmentPlan.view', plan._id, { planId });
+    writeAuditLog(ctx, 'treatmentPlan.view', plan._id.toString(), { planId });
   }
 
   return plan;

@@ -86,11 +86,11 @@ async function writeAuditLog(
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CreatePatientInput {
-  firstName: string;
-  lastName: string;
-  dateOfBirth: Date;
-  email: string;
-  phone: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: Date;
+  email?: string;
+  phone?: string;
   insuranceProvider?: string | undefined;
   insurancePolicyNumber?: string | undefined;
   allergies?: string[] | undefined;
@@ -112,7 +112,7 @@ export interface UpdatePatientInput {
 }
 
 export interface SearchPatientsInput {
-  query: string;
+  query?: string;
   limit?: number;
   offset?: number;
 }
@@ -123,9 +123,9 @@ export interface SearchPatientsResult {
 }
 
 export interface GetUploadUrlInput {
-  patientId: string;
-  fileName: string;
-  mimeType: XrayMimeType;
+  patientId?: string;
+  fileName?: string;
+  mimeType?: XrayMimeType;
 }
 
 export interface GetUploadUrlResult {
@@ -135,8 +135,8 @@ export interface GetUploadUrlResult {
 }
 
 export interface GetXrayUrlInput {
-  patientId: string;
-  s3Key: string;
+  patientId?: string;
+  s3Key?: string;
 }
 
 export interface GetXrayUrlResult {

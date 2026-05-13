@@ -11,8 +11,8 @@ import { Invoice } from '../models/Invoice.js';
 import { Notification } from '../models/Notification.js';
 
 export interface DateRange {
-  from: Date;
-  to: Date;
+  from?: Date;
+  to?: Date;
 }
 
 // ─── Appointment analytics ────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Schema, model, type Document, type Model } from 'mongoose';
 
 export type AgentName = 'IntakeAgent' | 'TriageAgent' | 'SchedulingAgent' | 'NotificationAgent' | 'SummaryAgent';

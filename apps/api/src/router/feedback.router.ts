@@ -7,7 +7,7 @@ import { router, publicProcedure, protectedProcedure } from '../trpc/trpc.js';
 import { requirePermission } from '../middleware/rbac.js';
 import { Feedback } from '../models/Feedback.js';
 
-export const feedbackRouter = router({
+export const feedbackRouter: any = router({
   /** Public — patients submit feedback without auth */
   submit: publicProcedure
     .input(

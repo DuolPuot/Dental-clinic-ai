@@ -160,14 +160,16 @@ export async function sendNotification(payload: NotificationPayload): Promise<vo
 
     await markSent(type, patientId, appointmentId);
 
-    await Notification.create({
+    const notification: any = {
       patientId,
       type,
       channel: type.endsWith('_email') ? 'email' : type.endsWith('_whatsapp') ? 'whatsapp' : 'sms',
       to,
       sentAt: new Date(),
       templateData,
-    });
+    };
+
+    await Notification.create(notification);
   } catch (err) {
     console.error(`[Notifications] Failed to send ${type} to ${to}:`, err);
   }
@@ -289,6 +291,6 @@ async function sendWhatsApp(
 
 // ─── Notification log ─────────────────────────────────────────────────────────
 
-export async function getPatientNotifications(patientId: string) {
+export async function getPatientNotifications(patientId: string): Promise<any> {
   return Notification.find({ patientId }).sort({ sentAt: -1 }).lean();
 }

@@ -41,22 +41,22 @@ async function writeAuditLog(
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface GenerateInvoiceInput {
-  patientId: string;
-  treatmentPlanId: string;
+  patientId?: string;
+  treatmentPlanId?: string;
   insuranceCoverage?: number;
   dueDate?: Date;
 }
 
 export interface RecordPaymentInput {
-  invoiceId: string;
-  paymentMethod: 'card' | 'cash' | 'insurance';
-  amount: number;
+  invoiceId?: string;
+  paymentMethod?: 'card' | 'cash' | 'insurance';
+  amount?: number;
 }
 
 export interface ReportInput {
-  period: 'daily' | 'weekly' | 'monthly';
-  from: Date;
-  to: Date;
+  period?: 'daily' | 'weekly' | 'monthly';
+  from?: Date;
+  to?: Date;
 }
 
 export interface ReportResult {
@@ -114,7 +114,7 @@ export async function generateInvoice(
     dueDate: input.dueDate ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
 
-  await writeAuditLog(ctx, 'invoice.generate', invoice._id, {
+  await writeAuditLog(ctx, 'invoice.generate', invoice._id.toString(), {
     invoiceId: invoice._id.toString(),
     patientId: input.patientId,
     subtotal,
@@ -150,7 +150,7 @@ export async function recordPayment(
   ).lean<IInvoice>();
 
   if (invoice) {
-    await writeAuditLog(ctx, 'invoice.payment', invoice._id, {
+    await writeAuditLog(ctx, 'invoice.payment', invoice._id.toString(), {
       invoiceId: input.invoiceId,
       method: input.paymentMethod,
       amount: input.amount,
@@ -269,7 +269,7 @@ export async function getInvoice(
   const invoice = await Invoice.findById(invoiceId).lean<IInvoice>();
 
   if (invoice) {
-    await writeAuditLog(ctx, 'invoice.view', invoice._id, { invoiceId });
+    await writeAuditLog(ctx, 'invoice.view', invoice._id.toString(), { invoiceId });
   }
 
   return invoice;

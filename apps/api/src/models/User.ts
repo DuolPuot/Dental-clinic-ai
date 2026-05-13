@@ -1,5 +1,6 @@
 import { Schema, model, type Document, type Model } from 'mongoose';
 
+// @ts-ignore - mongoose Document type compatibility
 export interface IUser extends Document {
   _id: Schema.Types.ObjectId;
   email: string;

@@ -304,14 +304,14 @@ export async function login(
 
   if (!user.isActive) {
     await recordFailedAttempt(normalizedEmail);
-    await writeAuditLog(user._id, 'auth.login.failed', ctx, { reason: 'account_inactive' });
+    await writeAuditLog(user._id.toString(), 'auth.login.failed', ctx, { reason: 'account_inactive' });
     throw new AuthError('ACCOUNT_INACTIVE', 'Your account has been deactivated. Please contact an administrator.');
   }
 
   const passwordValid = await verifyPassword(password, user.passwordHash);
   if (!passwordValid) {
     const attempts = await recordFailedAttempt(normalizedEmail);
-    await writeAuditLog(user._id, 'auth.login.failed', ctx, {
+    await writeAuditLog(user._id.toString(), 'auth.login.failed', ctx, {
       reason: 'invalid_password',
       failedAttempts: attempts,
     });
@@ -332,7 +332,7 @@ export async function login(
 
   await storeRefreshToken(userId, tokenId);
 
-  await writeAuditLog(user._id, 'auth.login.success', ctx, { tokenId });
+  await writeAuditLog(user._id.toString(), 'auth.login.success', ctx, { tokenId });
 
   return {
     accessToken,

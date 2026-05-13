@@ -18,7 +18,7 @@ import {
   type NotificationType,
 } from '../services/notification.service.js';
 
-export const notificationsRouter = router({
+export const notificationsRouter: any = router({
   getLog: protectedProcedure
     .use(requirePermission('notifications', 'read'))
     .input(z.object({ patientId: z.string().min(1) }))

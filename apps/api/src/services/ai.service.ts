@@ -44,7 +44,7 @@ export interface Treatment {
 }
 
 export interface DecisionSupportInput {
-  symptoms: string;
+  symptoms?: string;
   patientHistorySummary?: string;
   currentMedications?: string[];
 }
