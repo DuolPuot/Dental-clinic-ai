@@ -1,0 +1,144 @@
+groups:
+  - name: Dental Clinic Alerts
+    interval: 30s
+    rules:
+      # Database Alerts
+      - alert: MongoDBDown
+        expr: up{job="mongodb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MongoDB is down"
+          description: "MongoDB instance {{ $labels.instance }} is unavailable"
+
+      - alert: MongoDBHighMemory
+        expr: mongodb_resident_memory_bytes / 1024 / 1024 > 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MongoDB memory usage is high"
+          description: "MongoDB is using {{ $value }}MB of memory"
+
+      - alert: MongoDBSlowQueries
+        expr: rate(mongodb_mongod_op_latencies_latency_total{type="command"}[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MongoDB slow queries detected"
+          description: "MongoDB query latency is high"
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis instance {{ $labels.instance }} is unavailable"
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / 1024 / 1024 > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using {{ $value }}MB of memory"
+
+      - alert: RedisEvictions
+        expr: rate(redis_evicted_keys_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis is evicting keys"
+          description: "Redis is running out of memory and evicting keys"
+
+      # API Alerts
+      - alert: APIDown
+        expr: up{job="api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API server is down"
+          description: "API server {{ $labels.instance }} is unavailable"
+
+      - alert: APIHighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API has high error rate"
+          description: "API error rate is {{ $value | humanizePercentage }}"
+
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API response time is high"
+          description: "API p95 latency is {{ $value }}s"
+
+      # System Alerts
+      - alert: HighCPUUsage
+        expr: (1 - rate(node_cpu_seconds_total{mode="idle"}[5m])) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: DiskSpaceRunningOut
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space running out"
+          description: "Disk usage is {{ $value | humanizePercentage }}"
+
+      - alert: DiskINodesRunningOut
+        expr: (1 - (node_filesystem_files_free / node_filesystem_files)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk inodes running out"
+          description: "Inode usage is {{ $value | humanizePercentage }}"
+
+      # Docker Alerts
+      - alert: ContainerDown
+        expr: up{job=~"api|mongodb|redis"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.job }} is down"
+          description: "Container has been down for more than 2 minutes"
+
+      # Backup Alerts
+      - alert: BackupMissing
+        expr: time() - node_stat_mtim_seconds{path="/mnt/backups/latest"} > 86400
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "No recent backup found"
+          description: "Latest backup is more than 24 hours old"

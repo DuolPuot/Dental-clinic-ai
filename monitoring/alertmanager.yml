@@ -1,0 +1,97 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+route:
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-receiver'
+      continue: true
+      group_wait: 0s
+      repeat_interval: 5m
+
+    # Warning alerts - summary notification
+    - match:
+        severity: warning
+      receiver: 'warning-receiver'
+      group_wait: 10m
+      repeat_interval: 1h
+
+    # Database alerts
+    - match:
+        alertname: MongoDB.*
+      receiver: 'database-team'
+      group_wait: 5m
+
+    # API alerts
+    - match:
+        alertname: API.*
+      receiver: 'dev-team'
+      group_wait: 5m
+
+receivers:
+  # Default receiver
+  - name: 'default-receiver'
+    slack_configs:
+      - channel: '#alerts'
+        title: 'Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+
+  # Critical alerts - page on-call engineer
+  - name: 'critical-receiver'
+    slack_configs:
+      - channel: '#critical-alerts'
+        title: '🔴 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        description: '{{ .GroupLabels.alertname }}'
+        details:
+          firing: '{{ range .Alerts.Firing }}{{ .Labels.instance }} {{ end }}'
+
+  # Warning alerts - summary channel
+  - name: 'warning-receiver'
+    slack_configs:
+      - channel: '#warnings'
+        title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+
+  # Database team
+  - name: 'database-team'
+    slack_configs:
+      - channel: '#db-team'
+        title: 'Database Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  # Dev team
+  - name: 'dev-team'
+    slack_configs:
+      - channel: '#dev-team'
+        title: 'API Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+inhibit_rules:
+  # Don't send warning if critical alert exists
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+  # Suppress alerts during maintenance window
+  - source_match:
+      alertname: 'AlertmanagerConfigReloadFailed'
+    target_match_re:
+      alertname: '.*'
+    equal: ['instance']
