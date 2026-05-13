@@ -1,0 +1,47 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd /opt/Dental-clinic-ai
+            git fetch origin
+            git checkout main
+            git pull origin main
+            
+            # Build and deploy
+            docker-compose build
+            docker-compose up -d
+            
+            # Run migrations/seed if needed
+            docker-compose exec -T api npm run seed || true
+            
+            # Health check
+            sleep 5
+            curl -f http://localhost:3000/api/health || exit 1
+            
+            echo "✅ Deployment successful"
+      
+      - name: Notify Deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Dental Clinic AI deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
