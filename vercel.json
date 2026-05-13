@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "buildCommand": "npm install && npm run build",
+  "outputDirectory": "apps/api/dist",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "apps/api/src/index.ts": {
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}
