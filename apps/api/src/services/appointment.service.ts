@@ -14,8 +14,8 @@ async function hasConflict(dentistId: string, operatoryId: string, startTime: Da
   return (await Appointment.countDocuments(f)) > 0;
 }
 
-export async function getAvailability(input: { dentistId?: string; operatoryId?: string; from?: Date; to?: Date; slotDurationMinutes?: number }): Promise<{ startTime: Date; endTime: Date }[]> {
-  const { dentistId = '', operatoryId, from = new Date(), to = new Date(Date.now() + 86400000), slotDurationMinutes = 30 } = input;
+export async function getAvailability(input: { dentistId: string; operatoryId?: string; from: Date; to: Date; slotDurationMinutes?: number }): Promise<{ startTime: Date; endTime: Date }[]> {
+  const { dentistId, operatoryId, from, to, slotDurationMinutes = 30 } = input;
   const f: Record<string, unknown> = { dentistId: new Types.ObjectId(dentistId), status: { $nin: ['cancelled'] }, startTime: { $lt: to }, endTime: { $gt: from } };
   if (operatoryId) f.operatoryId = new Types.ObjectId(operatoryId);
   const booked = await Appointment.find(f).select('startTime endTime').lean<Pick<IAppointment, 'startTime' | 'endTime'>[]>();
@@ -30,14 +30,14 @@ export async function getAvailability(input: { dentistId?: string; operatoryId?:
   return slots;
 }
 
-export async function createAppointment(input: { patientId?: string; dentistId?: string; operatoryId?: string; appointmentType?: AppointmentType; startTime?: Date; endTime?: Date; notes?: string }, ctx: AuditCtx): Promise<IAppointment> {
+export async function createAppointment(input: { patientId: string; dentistId: string; operatoryId: string; appointmentType: AppointmentType; startTime: Date; endTime: Date; notes?: string }, ctx: AuditCtx): Promise<IAppointment> {
   if (await hasConflict(input.dentistId, input.operatoryId, input.startTime, input.endTime)) throw new Error('CONFLICT: The requested time slot is not available.');
   const appt = await Appointment.create({ patientId: new Types.ObjectId(input.patientId), dentistId: new Types.ObjectId(input.dentistId), operatoryId: new Types.ObjectId(input.operatoryId), appointmentType: input.appointmentType, startTime: input.startTime, endTime: input.endTime, status: 'scheduled', notes: input.notes });
   writeAuditLog(ctx, 'appointment.create', appt._id.toString(), { patientId: input.patientId });
   return appt;
 }
 
-export async function updateAppointment(input: { appointmentId?: string; appointmentType?: AppointmentType; startTime?: Date; endTime?: Date; status?: string; notes?: string }, ctx: AuditCtx): Promise<IAppointment | null> {
+export async function updateAppointment(input: { appointmentId: string; appointmentType?: AppointmentType; startTime?: Date; endTime?: Date; status?: string; notes?: string }, ctx: AuditCtx): Promise<IAppointment | null> {
   if (!Types.ObjectId.isValid(input.appointmentId)) return null;
   const existing = await Appointment.findById(input.appointmentId).lean<IAppointment>();
   if (!existing) return null;
@@ -51,7 +51,7 @@ export async function updateAppointment(input: { appointmentId?: string; appoint
   return updated;
 }
 
-export async function cancelAppointment(input: { appointmentId?: string; cancellationReason?: string }, ctx: AuditCtx): Promise<IAppointment | null> {
+export async function cancelAppointment(input: { appointmentId: string; cancellationReason: string }, ctx: AuditCtx): Promise<IAppointment | null> {
   if (!Types.ObjectId.isValid(input.appointmentId)) return null;
   const appt = await Appointment.findOneAndUpdate({ _id: input.appointmentId, status: { $nin: ['cancelled', 'completed'] } }, { $set: { status: 'cancelled', cancellationReason: input.cancellationReason } }, { new: true }).lean<IAppointment>();
   if (appt) writeAuditLog(ctx, 'appointment.cancel', appt._id.toString(), { reason: input.cancellationReason });
@@ -71,7 +71,7 @@ export async function getCalendar(dentistId: string, from: Date, to: Date, ctx: 
   return appts;
 }
 
-export async function publicBookAppointment(input: { patientId?: string; dentistId?: string; operatoryId?: string; appointmentType?: AppointmentType; startTime?: Date; endTime?: Date }): Promise<IAppointment> {
+export async function publicBookAppointment(input: { patientId: string; dentistId: string; operatoryId: string; appointmentType: AppointmentType; startTime: Date; endTime: Date }): Promise<IAppointment> {
   if (await hasConflict(input.dentistId, input.operatoryId, input.startTime, input.endTime)) throw new Error('CONFLICT: The requested time slot is not available.');
   return Appointment.create({ patientId: new Types.ObjectId(input.patientId), dentistId: new Types.ObjectId(input.dentistId), operatoryId: new Types.ObjectId(input.operatoryId), appointmentType: input.appointmentType, startTime: input.startTime, endTime: input.endTime, status: 'scheduled' });
 }
