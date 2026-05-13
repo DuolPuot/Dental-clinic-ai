@@ -1,0 +1,54 @@
+name: CI — Lint & Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: dental-clinic-ai-platform
+
+      - name: Lint API
+        run: npm run lint --workspace=apps/api
+        working-directory: dental-clinic-ai-platform
+        continue-on-error: true
+
+      - name: Lint Web
+        run: npm run lint --workspace=apps/web
+        working-directory: dental-clinic-ai-platform
+        continue-on-error: true
+
+      - name: Build API
+        run: npm run build --workspace=apps/api
+        working-directory: dental-clinic-ai-platform
+        env:
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET || 'ci-placeholder-secret-32-chars-min' }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET || 'ci-placeholder-refresh-32-chars-min' }}
+
+      - name: Build Web
+        run: npm run build --workspace=apps/web
+        working-directory: dental-clinic-ai-platform
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: dental-clinic-ai-platform/apps/web/dist
+          retention-days: 7

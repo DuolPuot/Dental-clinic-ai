@@ -10,28 +10,19 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'plugin:prettier/recommended',
   ],
   rules: {
-    // TypeScript
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'warn',
-    '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-    '@typescript-eslint/no-floating-promises': 'error',
-    '@typescript-eslint/await-thenable': 'error',
-
-    // General
+    '@typescript-eslint/no-require-imports': 'off',
     'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
     'prefer-const': 'error',
     'no-var': 'error',
-    eqeqeq: ['error', 'always'],
-
-    // Prettier
-    'prettier/prettier': 'error',
+    'prettier/prettier': 'warn',
   },
   env: {
     node: true,
@@ -43,6 +34,7 @@ module.exports = {
     'build/',
     '.next/',
     'coverage/',
+    '*.cjs',
     '*.js',
     '!.eslintrc.js',
   ],

@@ -1,47 +1,67 @@
-# Dependencies
+# ─── Dependencies ────────────────────────────────────────────────────────────
 node_modules/
 .pnp
 .pnp.js
 
-# Build outputs
+# ─── Build outputs ────────────────────────────────────────────────────────────
 dist/
 build/
 .next/
 out/
+apps/api/dist/
+apps/web/dist/
 
-# Environment files
+# ─── Environment files — NEVER commit real secrets ───────────────────────────
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+apps/api/.env
+apps/web/.env
 
-# Logs
+# ─── Logs ────────────────────────────────────────────────────────────────────
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
-# Testing
+# ─── Testing ─────────────────────────────────────────────────────────────────
 coverage/
 .vitest-cache/
+*.lcov
 
-# TypeScript
+# ─── TypeScript ──────────────────────────────────────────────────────────────
 *.tsbuildinfo
 
-# OS
+# ─── OS ──────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# IDE
+# ─── IDE ─────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
-# Docker
+# ─── Docker ──────────────────────────────────────────────────────────────────
 .docker/
 
-# Misc
+# ─── Vite cache ──────────────────────────────────────────────────────────────
+apps/web/node_modules/.vite/
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
 *.pem
+*.key
+*.cert
+write-service.cjs
+write-treatments.cjs
+write-book.cjs
+0

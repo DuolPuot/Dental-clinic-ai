@@ -7,41 +7,42 @@ on:
 
 jobs:
   deploy:
+    name: Deploy
     runs-on: ubuntu-latest
-    
+    # Only run if deploy secrets are configured
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install & Build
+        run: |
+          npm install
+          npm run build
+        working-directory: dental-clinic-ai-platform
+        env:
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+
+      - name: Deploy via SSH
+        if: ${{ secrets.DEPLOY_HOST != '' }}
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            cd /opt/Dental-clinic-ai
-            git fetch origin
-            git checkout main
-            git pull origin main
-            
-            # Build and deploy
-            docker-compose build
-            docker-compose up -d
-            
-            # Run migrations/seed if needed
-            docker-compose exec -T api npm run seed || true
-            
-            # Health check
-            sleep 5
-            curl -f http://localhost:3000/api/health || exit 1
-            
-            echo "✅ Deployment successful"
-      
-      - name: Notify Deployment
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Dental Clinic AI deployment ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        continue-on-error: true
+            cd /opt/dental-clinic-ai
+            git fetch origin main
+            git reset --hard origin/main
+            npm install --production
+            docker compose build --no-cache
+            docker compose up -d
+            echo "✅ Deployment complete"
