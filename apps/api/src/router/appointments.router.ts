@@ -31,6 +31,13 @@ import {
 import type { AuditContext } from '../services/patient.service.js';
 import type { Request } from 'express';
 
+// ─── Service input types (Zod validates at runtime; cast to satisfy tRPC inference) ──
+type AvailabilityInput = Parameters<typeof getAvailability>[0];
+type CreateInput      = Parameters<typeof createAppointment>[0];
+type UpdateInput      = Parameters<typeof updateAppointment>[0];
+type CancelInput      = Parameters<typeof cancelAppointment>[0];
+type PublicBookInput  = Parameters<typeof publicBookAppointment>[0];
+
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 function getAuditContext(req: Request, userId: string): AuditContext {
@@ -85,7 +92,7 @@ export const appointmentsRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      const slots = await getAvailability(input);
+      const slots = await getAvailability(input as AvailabilityInput);
       return { slots };
     }),
 
@@ -110,7 +117,7 @@ export const appointmentsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const auditCtx = getAuditContext(ctx.req, ctx.userId!);
       try {
-        const appointment = await createAppointment(input, auditCtx);
+        const appointment = await createAppointment(input as CreateInput, auditCtx);
         return serializeAppointment(appointment);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to create appointment.';
@@ -141,7 +148,7 @@ export const appointmentsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const auditCtx = getAuditContext(ctx.req, ctx.userId!);
       try {
-        const appointment = await updateAppointment(input, auditCtx);
+        const appointment = await updateAppointment(input as UpdateInput, auditCtx);
         if (!appointment) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Appointment not found.' });
         }
@@ -171,7 +178,7 @@ export const appointmentsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const auditCtx = getAuditContext(ctx.req, ctx.userId!);
-      const appointment = await cancelAppointment(input, auditCtx);
+      const appointment = await cancelAppointment(input as CancelInput, auditCtx);
       if (!appointment) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -232,7 +239,7 @@ export const appointmentsRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      const slots = await getAvailability(input);
+      const slots = await getAvailability(input as AvailabilityInput);
       return { slots };
     }),
 
@@ -287,7 +294,7 @@ export const appointmentsRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
-        const appointment = await publicBookAppointment(input);
+        const appointment = await publicBookAppointment(input as PublicBookInput);
         return serializeAppointment(appointment);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to book appointment.';

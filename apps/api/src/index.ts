@@ -1,3 +1,7 @@
+// Load .env file — runs before env validation so vars are available.
+// On Render/production, vars are injected directly; dotenv is a no-op when .env is missing.
+import 'dotenv/config';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
