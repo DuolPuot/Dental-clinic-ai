@@ -114,12 +114,12 @@ async function bootstrap(): Promise<void> {
   startReminderCron();
   startNotificationWorker();
 
-  app.listen(env.PORT, () => {
-    console.info(`\n🦷 DentalAI API ready`);
-    console.info(`   Port:   ${env.PORT}`);
-    console.info(`   tRPC:   http://localhost:${env.PORT}/trpc`);
-    console.info(`   Health: http://localhost:${env.PORT}/health\n`);
-  });
+  app.listen(env.PORT, '0.0.0.0', () => {
+  console.info(`\n🦷 DentalAI API ready`);
+  console.info(`   Port:   ${env.PORT}`);
+  console.info(`   tRPC:   http://0.0.0.0:${env.PORT}/trpc`);
+  console.info(`   Health: http://0.0.0.0:${env.PORT}/health\n`);
+});
 }
 
 bootstrap().catch((err) => {
