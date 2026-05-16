@@ -107,19 +107,35 @@ function startNotificationWorker(): void {
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 async function bootstrap(): Promise<void> {
-  await connectDatabase();
-  await connectRedis();
-  console.info('Database connected ✓');
+  try {
+    await connectDatabase();
+    console.info('Database connected ✓');
 
-  startReminderCron();
-  startNotificationWorker();
+    // Redis should not crash entire app if unavailable
+    try {
+      await connectRedis();
+      console.info('Redis connected ✓');
+    } catch (redisError) {
+      console.error('Redis connection failed:', redisError);
+    }
 
-  app.listen(env.PORT, '0.0.0.0', () => {
-  console.info(`\n🦷 DentalAI API ready`);
-  console.info(`   Port:   ${env.PORT}`);
-  console.info(`   tRPC:   http://0.0.0.0:${env.PORT}/trpc`);
-  console.info(`   Health: http://0.0.0.0:${env.PORT}/health\n`);
-});
+    startReminderCron();
+    startNotificationWorker();
+
+    const PORT = Number(process.env.PORT) || env.PORT || 3000;
+    const HOST = '0.0.0.0';
+
+    app.listen(PORT, HOST, () => {
+      console.info(`\n🦷 DentalAI API ready`);
+      console.info(`   Environment: ${env.NODE_ENV}`);
+      console.info(`   Port: ${PORT}`);
+      console.info(`   Health: /health`);
+      console.info(`   tRPC: /trpc\n`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
 }
 
 bootstrap().catch((err) => {
