@@ -34,9 +34,13 @@ const queryClient = new QueryClient({
     },
   },
 });
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined)
+  ? `${import.meta.env.VITE_API_URL}/trpc`
+  : '/trpc';
+
 const trpcClient = trpc.createClient({
   links: [httpBatchLink({
-    url: '/trpc',
+    url: API_URL,
     headers() {
       const token = localStorage.getItem('auth-token');
       return token ? { Authorization: 'Bearer ' + token } : {};
